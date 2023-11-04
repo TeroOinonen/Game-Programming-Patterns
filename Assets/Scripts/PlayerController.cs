@@ -21,8 +21,9 @@ public class PlayerController : MonoBehaviour
     StrategyMoveCommand strRightCmd;
 
     Stack<StrategyMoveCommand> moves;
+	Stack<StrategyMoveCommand> redoMoves;
 
-    private void Awake()
+	private void Awake()
     {
         rb = GetComponent<Rigidbody>();
     }
@@ -31,17 +32,18 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         moves = new Stack<StrategyMoveCommand>();
+        redoMoves = new Stack<StrategyMoveCommand>();
 
-        forwardCmd = new MoveCommand(Vector3.forward * movespeed, rb);
+		forwardCmd = new MoveCommand(Vector3.forward * movespeed, rb);
         backCmd = new MoveCommand(Vector3.back * movespeed, rb);
         leftCmd = new MoveCommand(Vector3.left * movespeed, rb);
         rightCmd = new MoveCommand(Vector3.right * movespeed, rb);
         jumpCmd = new MoveCommand(Vector3.up * jumpspeed, rb);
 
-        strForwardCmd = new StrategyMoveCommand(Vector3.forward, transform, ref moves);
-        strBackCmd = new StrategyMoveCommand(Vector3.back, transform, ref moves);
-        strLeftCmd = new StrategyMoveCommand(Vector3.left, transform, ref moves);
-        strRightCmd = new StrategyMoveCommand(Vector3.right, transform, ref moves);
+        strForwardCmd = new StrategyMoveCommand(Vector3.forward, transform);
+        strBackCmd = new StrategyMoveCommand(Vector3.back, transform);
+        strLeftCmd = new StrategyMoveCommand(Vector3.left, transform);
+        strRightCmd = new StrategyMoveCommand(Vector3.right, transform);
     }
 
     private void SwapCommands(ref MoveCommand A, ref MoveCommand B)
@@ -81,36 +83,49 @@ public class PlayerController : MonoBehaviour
         }
 
         // Reverse A D keys
-        if (Input.GetKeyDown(KeyCode.O))
+        if (Input.GetKeyDown(KeyCode.X))
         {
             SwapCommands(ref leftCmd, ref rightCmd);
         }
         
-        // Strategy Game movement using transform UJHK
-        if (Input.GetKey(KeyCode.U))
+        // Strategy Game movement using transform UJHK + O P for Redo/Undo
+        if (Input.GetKeyDown(KeyCode.U))
         {
-            forwardCmd.Execute();
+			strForwardCmd.Execute();
+            moves.Push(strForwardCmd);
         }
 
-        if (Input.GetKey(KeyCode.J))
+        if (Input.GetKeyDown(KeyCode.J))
         {
-            backCmd.Execute();
+            strBackCmd.Execute();
+			moves.Push(strBackCmd);
+
+		}
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            strRightCmd.Execute();
+            moves.Push(strRightCmd);
         }
 
-        if (Input.GetKey(KeyCode.K))
+        if (Input.GetKeyDown(KeyCode.H))
         {
-            rightCmd.Execute();
-        }
-
-        if (Input.GetKey(KeyCode.H))
-        {
-            leftCmd.Execute();
+            strLeftCmd.Execute();
+            moves.Push(strLeftCmd);
         }
 
         if (Input.GetKeyDown(KeyCode.P))
         {
             StrategyMoveCommand smc = moves.Pop();
-            smc.Undo();
+			redoMoves.Push(smc);
+			smc.Undo();
         }
-    }
+
+		if (Input.GetKeyDown(KeyCode.O))
+		{
+			StrategyMoveCommand smc = redoMoves.Pop();
+			moves.Push(smc);
+			smc.Redo();
+		}
+	}
 }

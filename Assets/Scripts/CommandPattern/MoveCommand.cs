@@ -17,4 +17,14 @@ public class MoveCommand : Command
         this.directionAndMagnitude = directionAndMagnitude;
         this.rb = rb;
     }
+
+	public override void Undo()
+	{
+		// Nothing
+	}
+
+	public override void Redo()
+	{
+		// Nothing
+	}
 }
