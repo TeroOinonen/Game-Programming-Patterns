@@ -20,8 +20,12 @@ public class PlayerController : MonoBehaviour
     StrategyMoveCommand strLeftCmd;
     StrategyMoveCommand strRightCmd;
 
-    Stack<Command> moves;
-	Stack<Command> redoMoves;
+    Stack<Command> moves = new Stack<Command>();
+    Stack<Command> redoMoves = new Stack<Command>();
+
+    Stack<Command> replayStack = new Stack<Command>();
+
+    bool isReplaying = false;
 
 	private void Awake()
     {
@@ -31,9 +35,6 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        moves = new Stack<Command>();
-        redoMoves = new Stack<Command>();
-
 		forwardCmd = new MoveCommand(Vector3.forward * movespeed, rb);
         backCmd = new MoveCommand(Vector3.back * movespeed, rb);
         leftCmd = new MoveCommand(Vector3.left * movespeed, rb);
@@ -56,6 +57,23 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (isReplaying)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            isReplaying = true;
+
+            while (moves.Count > 0)
+            {
+                replayStack.Push(moves.Pop());
+            }
+
+            StartCoroutine(Replay());
+        }
+
         // Movement using rigidbody WASD + Space, UNDO and REDO do not work for WASD as they rely on key being pressed long
         if (Input.GetKey(KeyCode.W))
         {
@@ -139,5 +157,24 @@ public class PlayerController : MonoBehaviour
         moves.Push(executeCmd);
         redoMoves.Clear(); // Remove redo commands, so that undo-undo-new command will not mess up redo queue
         Debug.Log("Undo buffer count:" + moves.Count);
+    }
+
+    IEnumerator Replay()
+    {
+        while (replayStack.Count > 0)
+        {
+            Command cmd = replayStack.Pop();
+
+            cmd.Execute();
+
+            float waittime = .001f;
+
+            if (cmd is StrategyMoveCommand)
+                waittime = .5f;
+
+            yield return new WaitForSeconds(waittime);
+        }
+
+        isReplaying = false;
     }
 }
