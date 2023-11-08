@@ -18,13 +18,16 @@ public class MoveCommand : Command
         this.rb = rb;
     }
 
-	public override void Undo()
+    // UNDO and REDO do not work for WASD as they rely on key being pressed long
+    public override void Undo()
 	{
-		// Nothing
-	}
+        Debug.Log("undo" + directionAndMagnitude + "reverse:" + (-1 * directionAndMagnitude));
+        rb.AddForce(-1 * directionAndMagnitude);
+    }
 
 	public override void Redo()
 	{
-		// Nothing
+        Debug.Log("REDO" + directionAndMagnitude);
+        Execute();
 	}
 }

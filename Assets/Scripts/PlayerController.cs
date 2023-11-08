@@ -20,8 +20,8 @@ public class PlayerController : MonoBehaviour
     StrategyMoveCommand strLeftCmd;
     StrategyMoveCommand strRightCmd;
 
-    Stack<StrategyMoveCommand> moves;
-	Stack<StrategyMoveCommand> redoMoves;
+    Stack<Command> moves;
+	Stack<Command> redoMoves;
 
 	private void Awake()
     {
@@ -31,8 +31,8 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        moves = new Stack<StrategyMoveCommand>();
-        redoMoves = new Stack<StrategyMoveCommand>();
+        moves = new Stack<Command>();
+        redoMoves = new Stack<Command>();
 
 		forwardCmd = new MoveCommand(Vector3.forward * movespeed, rb);
         backCmd = new MoveCommand(Vector3.back * movespeed, rb);
@@ -56,30 +56,30 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Movement using rigidbody WASD + Space
+        // Movement using rigidbody WASD + Space, UNDO and REDO do not work for WASD as they rely on key being pressed long
         if (Input.GetKey(KeyCode.W))
         {
-            forwardCmd.Execute();
+            ExecuteAndBuffer(forwardCmd);
         }
 
         if (Input.GetKey(KeyCode.S))
         {
-            backCmd.Execute();
+            ExecuteAndBuffer(backCmd);
         }
 
         if (Input.GetKey(KeyCode.D))
         {
-            rightCmd.Execute();
+            ExecuteAndBuffer(rightCmd);
         }
 
         if (Input.GetKey(KeyCode.A))
         {
-            leftCmd.Execute();
+            ExecuteAndBuffer(leftCmd);
         }
 
         if (Input.GetKey(KeyCode.Space))
         {
-            jumpCmd.Execute();
+            ExecuteAndBuffer(jumpCmd);
         }
 
         // Reverse A D keys
@@ -91,41 +91,53 @@ public class PlayerController : MonoBehaviour
         // Strategy Game movement using transform UJHK + O P for Redo/Undo
         if (Input.GetKeyDown(KeyCode.U))
         {
-			strForwardCmd.Execute();
-            moves.Push(strForwardCmd);
+            ExecuteAndBuffer(strForwardCmd);
         }
 
         if (Input.GetKeyDown(KeyCode.J))
         {
-            strBackCmd.Execute();
-			moves.Push(strBackCmd);
+            ExecuteAndBuffer(strBackCmd);
 
 		}
 
         if (Input.GetKeyDown(KeyCode.K))
         {
-            strRightCmd.Execute();
-            moves.Push(strRightCmd);
+            ExecuteAndBuffer(strRightCmd);
         }
 
         if (Input.GetKeyDown(KeyCode.H))
         {
-            strLeftCmd.Execute();
-            moves.Push(strLeftCmd);
+            ExecuteAndBuffer(strLeftCmd);
         }
 
         if (Input.GetKeyDown(KeyCode.P))
         {
-            StrategyMoveCommand smc = moves.Pop();
+            if (moves.Count < 1)
+                return;
+
+            Command smc = moves.Pop();
 			redoMoves.Push(smc);
 			smc.Undo();
+            Debug.Log("Undo buffer count:" + moves.Count);
         }
 
 		if (Input.GetKeyDown(KeyCode.O))
 		{
-			StrategyMoveCommand smc = redoMoves.Pop();
+            if (redoMoves.Count < 1)
+                return;
+
+            Command smc = redoMoves.Pop();
 			moves.Push(smc);
 			smc.Redo();
-		}
+            Debug.Log("redoMoves buffer count:" + redoMoves.Count);
+        }
 	}
+
+    private void ExecuteAndBuffer(Command executeCmd)
+    {
+        executeCmd.Execute();
+        moves.Push(executeCmd);
+        redoMoves.Clear(); // Remove redo commands, so that undo-undo-new command will not mess up redo queue
+        Debug.Log("Undo buffer count:" + moves.Count);
+    }
 }
