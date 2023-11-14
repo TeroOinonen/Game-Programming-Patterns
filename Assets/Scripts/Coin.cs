@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CoinPickup : MonoBehaviour
+public class Coin : MonoBehaviour
 {
-    public static event Action<CoinPickup> OnCoinCollected;
+	public static event Action OnCoinCollected;
 
-    public int CoinValue { get; private set; }
+	public int CoinValue { get; private set; }
 
     public void SetValue(int newValue)
     {
@@ -22,7 +22,7 @@ public class CoinPickup : MonoBehaviour
 
     private void OnDestroy()
     {
-        OnCoinCollected?.Invoke(this);
+        OnCoinCollected?.Invoke();
     }
 
     // Update is called once per frame

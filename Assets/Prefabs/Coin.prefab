@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4810035208005879893}
   - component: {fileID: 6895187612913062669}
   - component: {fileID: 4661254797462642793}
-  - component: {fileID: 6932855982387660792}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -84,29 +83,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &6932855982387660792
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3968334169991945002}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!1 &5578550035093627210
 GameObject:
   m_ObjectHideFlags: 0
@@ -117,6 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3662470292963485887}
   - component: {fileID: 3900011694537313665}
+  - component: {fileID: 8780592725854464168}
   m_Layer: 0
   m_Name: Coin
   m_TagString: Untagged
@@ -152,3 +129,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3b28d9a6c454de4aaa32632e01d4d18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!136 &8780592725854464168
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578550035093627210}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5000001
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}

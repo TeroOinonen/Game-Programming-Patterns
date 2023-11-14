@@ -136,7 +136,6 @@ public class PlayerController : MonoBehaviour
             Command smc = moves.Pop();
 			redoMoves.Push(smc);
 			smc.Undo();
-            Debug.Log("Undo buffer count:" + moves.Count);
         }
 
 		if (Input.GetKeyDown(KeyCode.O))
@@ -147,7 +146,6 @@ public class PlayerController : MonoBehaviour
             Command smc = redoMoves.Pop();
 			moves.Push(smc);
 			smc.Redo();
-            Debug.Log("redoMoves buffer count:" + redoMoves.Count);
         }
 	}
 
@@ -156,7 +154,6 @@ public class PlayerController : MonoBehaviour
         executeCmd.Execute();
         moves.Push(executeCmd);
         redoMoves.Clear(); // Remove redo commands, so that undo-undo-new command will not mess up redo queue
-        Debug.Log("Undo buffer count:" + moves.Count);
     }
 
     IEnumerator Replay()
@@ -177,4 +174,9 @@ public class PlayerController : MonoBehaviour
 
         isReplaying = false;
     }
+
+	private void OnTriggerEnter(Collider other)
+	{
+		Destroy(other.gameObject); // Destroy the coin!
+	}
 }
