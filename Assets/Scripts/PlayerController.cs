@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Input = UnityEngine.Input;
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody rb;
     private float movespeed = 30f;
-    private float jumpspeed = 30f;
+    private float jumpspeed = 400f;
 
     MoveCommand forwardCmd;
     MoveCommand backCmd;
@@ -26,6 +28,21 @@ public class PlayerController : MonoBehaviour
     Stack<Command> replayStack = new Stack<Command>();
 
     bool isReplaying = false;
+
+    private State currentState = State.STANDING; // Default to standing
+
+	private float megatimeLeft = 0f;
+
+	[SerializeField]
+	private TextMeshProUGUI stateText;
+
+	public enum State
+    {
+        STANDING, 
+        JUMPING,
+        CROUCHING,
+		MEGASTATE,
+    }
 
 	private void Awake()
     {
@@ -56,100 +73,159 @@ public class PlayerController : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
-        if (isReplaying)
-        {
-            return;
-        }
+	{
+		switch (currentState)
+		{
+			case State.STANDING:
+				if (Input.GetKeyDown(KeyCode.T) && IsGrounded()) // prevent double jump with grounded check
+				{
+					currentState = State.JUMPING;
+					rb.velocity = Vector3.up * 5f;
+				}
+				else if (Input.GetKeyDown(KeyCode.B))
+				{
+					currentState = State.CROUCHING;
+					gameObject.transform.localScale = Vector3.one * 0.5f; // Crouch to half scale
+				}
+				else if (Input.GetKeyDown(KeyCode.G) && IsGrounded())
+				{
+					currentState = State.MEGASTATE;
+					megatimeLeft = 2f;
+					gameObject.transform.localScale = Vector3.one * 2f; // Double size
+				}
+				break;
 
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            isReplaying = true;
+			case State.JUMPING:
+				if (IsGrounded())
+				{
+					currentState = State.STANDING; // Revert to standing state after landing
+				}
+				break;
 
-            while (moves.Count > 0)
-            {
-                replayStack.Push(moves.Pop());
-            }
+			case State.CROUCHING:
+				if (Input.GetKeyUp(KeyCode.B))
+				{
+					currentState = State.STANDING;
+					gameObject.transform.localScale = Vector3.one; // Restore to full scale when standing
+				}
+				break;
 
-            StartCoroutine(Replay());
-        }
+			case State.MEGASTATE:
+				if (megatimeLeft < 0)
+				{
+					currentState = State.STANDING; // Revert to standing state after landing
+					gameObject.transform.localScale = Vector3.one; // Restore to full scale when standing
+				}
+				break;
+		}
 
-        // Movement using rigidbody WASD + Space, UNDO and REDO do not work for WASD as they rely on key being pressed long
-        if (Input.GetKey(KeyCode.W))
-        {
-            ExecuteAndBuffer(forwardCmd);
-        }
+		megatimeLeft -= Time.deltaTime;
 
-        if (Input.GetKey(KeyCode.S))
-        {
-            ExecuteAndBuffer(backCmd);
-        }
+		stateText.text = currentState.ToString();
 
-        if (Input.GetKey(KeyCode.D))
-        {
-            ExecuteAndBuffer(rightCmd);
-        }
+		//CommandPatternHandling();
+	}
 
-        if (Input.GetKey(KeyCode.A))
-        {
-            ExecuteAndBuffer(leftCmd);
-        }
+	bool IsGrounded()
+	{
+		return rb.velocity.y == 0;
+	}
 
-        if (Input.GetKey(KeyCode.Space))
-        {
-            ExecuteAndBuffer(jumpCmd);
-        }
+	private void CommandPatternHandling()
+	{
+		if (isReplaying)
+		{
+			return;
+		}
 
-        // Reverse A D keys
-        if (Input.GetKeyDown(KeyCode.X))
-        {
-            SwapCommands(ref leftCmd, ref rightCmd);
-        }
-        
-        // Strategy Game movement using transform UJHK + O P for Redo/Undo
-        if (Input.GetKeyDown(KeyCode.U))
-        {
-            ExecuteAndBuffer(strForwardCmd);
-        }
+		if (Input.GetKeyDown(KeyCode.R))
+		{
+			isReplaying = true;
 
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            ExecuteAndBuffer(strBackCmd);
+			while (moves.Count > 0)
+			{
+				replayStack.Push(moves.Pop());
+			}
+
+			StartCoroutine(Replay());
+		}
+
+		// Movement using rigidbody WASD + Space, UNDO and REDO do not work for WASD as they rely on key being pressed long
+		if (Input.GetKey(KeyCode.W))
+		{
+			ExecuteAndBuffer(forwardCmd);
+		}
+
+		if (Input.GetKey(KeyCode.S))
+		{
+			ExecuteAndBuffer(backCmd);
+		}
+
+		if (Input.GetKey(KeyCode.D))
+		{
+			ExecuteAndBuffer(rightCmd);
+		}
+
+		if (Input.GetKey(KeyCode.A))
+		{
+			ExecuteAndBuffer(leftCmd);
+		}
+
+		if (Input.GetKey(KeyCode.Space))
+		{
+			ExecuteAndBuffer(jumpCmd);
+		}
+
+		// Reverse A D keys
+		if (Input.GetKeyDown(KeyCode.X))
+		{
+			SwapCommands(ref leftCmd, ref rightCmd);
+		}
+
+		// Strategy Game movement using transform UJHK + O P for Redo/Undo
+		if (Input.GetKeyDown(KeyCode.U))
+		{
+			ExecuteAndBuffer(strForwardCmd);
+		}
+
+		if (Input.GetKeyDown(KeyCode.J))
+		{
+			ExecuteAndBuffer(strBackCmd);
 
 		}
 
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            ExecuteAndBuffer(strRightCmd);
-        }
+		if (Input.GetKeyDown(KeyCode.K))
+		{
+			ExecuteAndBuffer(strRightCmd);
+		}
 
-        if (Input.GetKeyDown(KeyCode.H))
-        {
-            ExecuteAndBuffer(strLeftCmd);
-        }
+		if (Input.GetKeyDown(KeyCode.H))
+		{
+			ExecuteAndBuffer(strLeftCmd);
+		}
 
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            if (moves.Count < 1)
-                return;
+		if (Input.GetKeyDown(KeyCode.P))
+		{
+			if (moves.Count < 1)
+				return;
 
-            Command smc = moves.Pop();
+			Command smc = moves.Pop();
 			redoMoves.Push(smc);
 			smc.Undo();
-        }
+		}
 
 		if (Input.GetKeyDown(KeyCode.O))
 		{
-            if (redoMoves.Count < 1)
-                return;
+			if (redoMoves.Count < 1)
+				return;
 
-            Command smc = redoMoves.Pop();
+			Command smc = redoMoves.Pop();
 			moves.Push(smc);
 			smc.Redo();
-        }
+		}
 	}
 
-    private void ExecuteAndBuffer(Command executeCmd)
+	private void ExecuteAndBuffer(Command executeCmd)
     {
         executeCmd.Execute();
         moves.Push(executeCmd);
