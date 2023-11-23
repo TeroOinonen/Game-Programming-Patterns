@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Game : MonoBehaviour
@@ -13,6 +14,10 @@ public class Game : MonoBehaviour
     GameObject[,] tiles = new GameObject[Width, Height];
 
     private float TimeAccu = 0.0f;
+    private bool isRunning;
+
+    [SerializeField]
+    private TextMeshProUGUI statusTextLabel;
 
     // Start is called before the first frame update
     void Start()
@@ -46,10 +51,19 @@ public class Game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        TimeAccu += Time.deltaTime;
-
-        if (TimeAccu < 3)
+        if (!isRunning)
+        {
+            statusTextLabel.text = "Stopped";
             return;
+        }
+
+        TimeAccu -= Time.deltaTime;
+
+        if (TimeAccu > 0)
+        {
+            statusTextLabel.text = "Until tick:" + TimeAccu.ToString("0.00");
+            return;
+        }
 
         for (int x = 0; x < Width; x++)
         {
@@ -78,7 +92,6 @@ public class Game : MonoBehaviour
             }
         }
 
-
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
@@ -93,6 +106,8 @@ public class Game : MonoBehaviour
                 }
             }
         }
+
+        TimeAccu = 3; // reset tick timer
     }
 
     private int CountNeighbors(ref bool[,] grid, int x, int y)
@@ -113,5 +128,10 @@ public class Game : MonoBehaviour
         }
 
         return liveNeighbors;
+    }
+
+    public void RunStop()
+    {
+        isRunning = !isRunning;
     }
 }
