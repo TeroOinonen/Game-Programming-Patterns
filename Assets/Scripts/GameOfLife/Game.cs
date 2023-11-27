@@ -11,11 +11,8 @@ public class Game : MonoBehaviour
     private static readonly int Width = 10;
     private static readonly int Height = 10;
 
-    bool[,] grid = new bool[Width, Height];
-    bool[,] gridB = new bool[Width, Height];
-
-    bool[,] currentGrid;
-    bool[,] nextGrid;
+    bool[,] currentGrid = new bool[Width, Height];
+    bool[,] nextGrid = new bool[Width, Height];
 
     GameObject[,] tiles = new GameObject[Width, Height];
 
@@ -33,30 +30,27 @@ public class Game : MonoBehaviour
         {
             for (int y = 0; y < Height; y++)
             {
-                // Clear the grid
-                grid[x, y] = false;
-                gridB[x, y] = false;
+				// Clear the grid
+				currentGrid[x, y] = false;
+				nextGrid[x, y] = false;
 
                 // Instantiate the tile
                 tiles[x, y] = Instantiate(TilePrefab, new Vector3(x, 0, y) * 1.05f, Quaternion.identity);
 
                 //tiles[x,y].SetActive(false);
-                tiles[x, y].GetComponentInChildren<MeshRenderer>().material.color = Color.black;
+                tiles[x, y].GetComponentInChildren<MeshRenderer>().material.color = Color.red;
             }
         }
 
-        grid[3, 5] = true;
-        grid[4, 5] = true;
-        grid[5, 5] = true;
-        grid[4, 4] = true;
+		currentGrid[3, 5] = true;
+		currentGrid[4, 5] = true;
+		currentGrid[5, 5] = true;
+		currentGrid[4, 4] = true;
 
         tiles[3, 5].GetComponentInChildren<MeshRenderer>().material.color = Color.white;
         tiles[4, 5].GetComponentInChildren<MeshRenderer>().material.color = Color.white;
         tiles[5, 5].GetComponentInChildren<MeshRenderer>().material.color = Color.white;
         tiles[4, 4].GetComponentInChildren<MeshRenderer>().material.color = Color.white;
-
-        currentGrid = grid;
-        nextGrid = gridB;
     }
 
     // Update is called once per frame
@@ -88,11 +82,12 @@ public class Game : MonoBehaviour
 
                 int numNeighbors = CountNeighbors(ref currentGrid, x, y);
 
-                if (numNeighbors < 2 || numNeighbors > 3) // 1 && 3
+
+				if (numNeighbors < 2 || numNeighbors > 3) // 1 && 3
                 {
                     nextGrid[x, y] = false;
                 }
-                else if (nextGrid[x, y] == true && (numNeighbors == 2 || numNeighbors == 3)) // 2
+                else if (currentGrid[x, y] == true && (numNeighbors == 2 || numNeighbors == 3)) // 2
                 {
                     nextGrid[x, y] = true;
                 }
@@ -102,8 +97,7 @@ public class Game : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("Fell through with x:" + x + " y:" + y);
-                    nextGrid[x, y] = false; // Fall through default, should not really happen
+                    nextGrid[x, y] = false; // Fall through default
                 }
             }
         }
@@ -112,15 +106,15 @@ public class Game : MonoBehaviour
 
         TimeAccu = 3; // reset tick timer
 
-        SwapGrids();
+        SwapGrids(ref currentGrid, ref nextGrid);
     }
 
-    private void SwapGrids()
+    private void SwapGrids(ref bool[,] current, ref bool[,] next)
     {
-        bool[,] temp = nextGrid;
+        bool[,] temp = next;
 
-        nextGrid = currentGrid;
-        currentGrid = temp;        
+		next = current;
+		current = temp;        
     }
 
     private void DrawGridOnScreen(ref bool[,] drawGrid)
@@ -149,7 +143,7 @@ public class Game : MonoBehaviour
         {
             for (int j= y - 1; j <= y + 1; j++)
             {
-                if (i < 0 || i >= Width || j < 0 || j >= Height) continue;
+                if (i < 0 || i > Width - 1 || j < 0 || j > Height - 1) continue;
 
                 if (i == x && j == y) continue;
 
